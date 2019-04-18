@@ -10,6 +10,7 @@ const GRID_HEIGHT = 120
 const GRIDS_NUM_PER_ROW = 8
 const PRE_VIEW_NUM = 500
 const ADVANCE_ROW_NUM = 2
+const ADVANCE_FETCH_TIME = 3000
 
 const fetcher = new Fetch()
 
@@ -24,6 +25,8 @@ class Content extends Component {
       gridsInfo: {},
       isLoading: true
     }
+    this.lastScrollTop = 0
+    this.timer = null
     this.debouncedHandleScroll = debounce(this.handleScroll, 100)
     this.debouncedFetchIdsOnScreen = debounce(this.fetchIdsOnScreen, 400)
   }
@@ -72,6 +75,16 @@ class Content extends Component {
     }
     // get visible ids and fetch them
     this.debouncedFetchIdsOnScreen(scrollTop)
+
+    // TODO: fetch next page in advance if the user stays
+    clearTimeout(this.timer)
+    this.timer = setTimeout(() => {
+      if (this.lastScrollTop === scrollTop) {
+        // const idsOnNextPage = this.getIdsOnNextPage()
+        // fetcher.fetchNextPage()
+      }
+    }, ADVANCE_FETCH_TIME);
+    this.lastScrollTop = scrollTop
   }
 
   loadMoreGridContainers = () => {
