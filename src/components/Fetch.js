@@ -4,6 +4,7 @@ const storiesUrl = 'https://hacker-news.firebaseio.com/v0/'
 const getTopStoriesUrl = () => (`${storiesUrl}/topstories.json`)
 
 const proxyServer = 'http://localhost:3001'
+const getFirstPageInfoFromServer = `${proxyServer}/getFirstPageInfo`
 const getStoryInfoFromServer = `${proxyServer}/getStoryInfo`
 
 export default class Fetch {
@@ -22,8 +23,9 @@ export default class Fetch {
 		return axios(getTopStoriesUrl()).then(res => res.data)
 	}
 
-	fetchFirstPage() {
-
+	fetchFirstPage(idsToShowOnfirstPage) {
+		return axios.post(getFirstPageInfoFromServer, { idsToShow: idsToShowOnfirstPage }).then(res => res.data)
+		// const gridsInfo = await 
 	}
 
 	async fetchGridOnScreenInfo(idsOnScreen, gridsInfo) {

@@ -21,7 +21,8 @@ class Content extends Component {
       loadCount: 0, // 测
       idsToShow: [],
       gridsNumPerLoad: 0,
-      gridsInfo: {} // save the
+      gridsInfo: {}, // save the
+      isLoading: true
     }
     this.debouncedHandleScroll = debounce(this.handleScroll, 100)
     this.debouncedFetchIdsOnScreen = debounce(this.fetchIdsOnScreen, 400)
@@ -29,14 +30,22 @@ class Content extends Component {
 
   async componentDidMount() {
     const storyIds = await fetcher.fetchTopStories()
+
     const gridsNumPerLoad = this.getGridsNumPerScreen() + 1 // 不加行不行
     const idsToShowOnfirstPage = storyIds.slice(0, gridsNumPerLoad + 2)
+    // fast API for first page
+    const gridsInfo = await fetcher.fetchFirstPage(idsToShowOnfirstPage)
 
     this.setState({
       storyIds,
       idsToShow: idsToShowOnfirstPage,
       gridsNumPerLoad,
+      loadCount: 1,
+      gridsInfo,
+      isLoading: false,
+      // idsOnScreen: idsToShowOnfirstPage,
     })
+
     window.addEventListener('scroll', this.debouncedHandleScroll, true)
 
   }
@@ -82,17 +91,7 @@ class Content extends Component {
     let idsOnScreen = this.getIdsOnScreen(scrollTop)
 
     let newGridsInfo = await fetcher.fetchGridOnScreenInfo(idsOnScreen, this.state.gridsInfo)
-    // .then(
-    //   newGridsInfo => {
-    //     // console.log(Object.keys(this.state.gridsInfo))
-    //     // console.log(newGridsInfo)
-    //     this.setState({
-    //       gridsInfo: { ...newGridsInfo, ...this.state.gridsInfo }
-    //     }, () => {
-    //       // console.log(Object.keys(this.state.gridsInfo))
-    //     })
-    //   }
-    // )
+
     this.setState({ gridsInfo: { ...newGridsInfo, ...this.state.gridsInfo } })
   }
 
@@ -141,9 +140,11 @@ class Content extends Component {
   }
 
   render() {
-    const grids = this.state.idsToShow.map((id) => {
+    const { state: { idsToShow, storyIds, gridsInfo } } = this
+
+    const grids = idsToShow.map((id) => {
       return (<GridContainer
-        {...this.state.gridsInfo[id]}
+        {...gridsInfo[id]}
         key={id}
       />)
     })
