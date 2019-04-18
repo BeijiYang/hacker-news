@@ -2,8 +2,15 @@ import React, { Component } from 'react'
 import Grid from './Grid'
 
 class GridContainer extends Component {
-  constructor(props) {
-    super(props)
+
+  shouldComponentUpdate(nextProps, nextState) {
+    return (
+      (this.props.title !== nextProps.title)
+      || (this.props.text !== nextProps.text)
+      || (this.props.url !== nextProps.url)
+      || (this.props.score !== nextProps.score)
+      || (this.props.by !== nextProps.by)
+    )
   }
 
   toggleExpand = (e) => {
