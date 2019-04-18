@@ -21,7 +21,7 @@ Grid.propTypes = {
 	handleClick: PropTypes.func,
 	title: PropTypes.string,
 	by: PropTypes.string,
-	score: PropTypes.string,
+	score: PropTypes.number,
 	url: PropTypes.string,
 	text: PropTypes.string,
 }
