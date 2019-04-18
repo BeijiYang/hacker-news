@@ -126,5 +126,6 @@ Because the response data of Hacker News API for a story doesn't contain the tex
 
 * Better styling
 
-
 * trying refactor it using Redux and Immutable
+
+* making it responsible for different screens
