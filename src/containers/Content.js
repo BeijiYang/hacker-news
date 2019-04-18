@@ -76,7 +76,11 @@ class Content extends Component {
     // get visible ids and fetch them
     this.debouncedFetchIdsOnScreen(scrollTop)
 
-    // TODO: fetch next page in advance if the user stays
+    this.fetchInAdvanceIfUserStay(scrollTop)
+  }
+
+  // TODO: fetch next page in advance if the user stays
+  fetchInAdvanceIfUserStay = (scrollTop) => {
     clearTimeout(this.timer)
     this.timer = setTimeout(() => {
       if (this.lastScrollTop === scrollTop) {
