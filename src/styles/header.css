@@ -1,0 +1,12 @@
+.header {
+  height: 100px;
+  width: 100vw;
+  background-color: #ff6700;
+  flex: 0 0 auto;
+  text-align: center;
+}
+
+.hacker-news {
+  font-size: 80px;
+  font-weight: 600;
+}

@@ -1,0 +1,6 @@
+.content {
+  margin: 0 auto;
+  overflow-y: scroll;
+  display: grid;
+  grid-template-columns: repeat(8, 1fr);
+}

@@ -1,6 +1,7 @@
 import React, { Component } from 'react'
-import Grid from './Grid'
+import GridContainer from './GridContainer'
 import axios from 'axios'
+import '../styles/content.css'
 
 
 const storiesUrl = 'https://hacker-news.firebaseio.com/v0/topstories.json'
@@ -24,8 +25,7 @@ class Content extends Component {
 
 	render() {
 		const grids = this.state.storyIds.map((id) => {
-			return (<Grid
-				id="grid"
+			return (<GridContainer
 				key={id}
 			/>)
 		})
