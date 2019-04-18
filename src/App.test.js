@@ -9,4 +9,9 @@ describe('<App />', () => {
   it('renders without crashing', () => {
     shallow(<App />)
   })
+  it('renders a Main', () => {
+    const wrapper = shallow(<App />)
+    const Main = wrapper.find('Main')
+    expect(Main).toHaveLength(1)
+  })
 })
