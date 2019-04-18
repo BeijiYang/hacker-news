@@ -19,6 +19,7 @@ class GridContainer extends Component {
       <div className="grid" ref={(grid) => this.grid = grid}>
         <Grid
           handleClick={toggleExpand}
+          {...this.props}
         />
       </div>
     )

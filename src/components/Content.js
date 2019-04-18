@@ -143,6 +143,7 @@ class Content extends Component {
   render() {
     const grids = this.state.idsToShow.map((id) => {
       return (<GridContainer
+        {...this.state.gridsInfo[id]}
         key={id}
       />)
     })
