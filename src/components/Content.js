@@ -3,6 +3,7 @@ import GridContainer from './GridContainer'
 import axios from 'axios'
 import { debounce } from '../utils/debounce'
 import Fetch from './Fetch'
+import BigLoading from './BigLoading'
 import '../styles/content.css'
 
 
@@ -150,7 +151,7 @@ class Content extends Component {
     })
     return (
       <div className="content" ref={content => { this.content = content }}>
-        {grids}
+        {this.state.isLoading ? <BigLoading /> : grids}
       </div>
     )
   }
