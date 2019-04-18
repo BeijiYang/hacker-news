@@ -1,16 +1,15 @@
 import React, { Component } from 'react'
 import GridContainer from './GridContainer'
+import Fetch from '../utils/Fetch'
+import BigLoading from '../components/layout/BigLoading'
 import axios from 'axios'
 import { debounce } from '../utils/debounce'
-import Fetch from './Fetch'
-import BigLoading from './BigLoading'
 import '../styles/content.css'
 
-
-const storiesUrl = 'https://hacker-news.firebaseio.com/v0/topstories.json'
 const GRID_HEIGHT = 120
 const GRIDS_NUM_PER_ROW = 8
-const PRE_VIEW_NUM = 500 // text 预览字数
+const PRE_VIEW_NUM = 500
+const ADVANCE_ROW_NUM = 2
 
 const fetcher = new Fetch()
 
@@ -19,10 +18,10 @@ class Content extends Component {
     super(props)
     this.state = {
       storyIds: [],
-      loadCount: 0, // 测
+      loadCount: 0,
       idsToShow: [],
       gridsNumPerLoad: 0,
-      gridsInfo: {}, // save the
+      gridsInfo: {},
       isLoading: true
     }
     this.debouncedHandleScroll = debounce(this.handleScroll, 100)
@@ -32,8 +31,8 @@ class Content extends Component {
   async componentDidMount() {
     const storyIds = await fetcher.fetchTopStories()
 
-    const gridsNumPerLoad = this.getGridsNumPerScreen() + 1 // 不加行不行
-    const idsToShowOnfirstPage = storyIds.slice(0, gridsNumPerLoad + 2)
+    const gridsNumPerLoad = this.getGridsNumPerScreen()
+    const idsToShowOnfirstPage = storyIds.slice(0, gridsNumPerLoad + ADVANCE_ROW_NUM)
     // fast API for first page
     const gridsInfo = await fetcher.fetchFirstPage(idsToShowOnfirstPage)
 
@@ -44,23 +43,20 @@ class Content extends Component {
       loadCount: 1,
       gridsInfo,
       isLoading: false,
-      // idsOnScreen: idsToShowOnfirstPage,
     })
 
     window.addEventListener('scroll', this.debouncedHandleScroll, true)
-
   }
 
   componentWillUnmount() {
     window.removeEventListener('scroll', this.debouncedHandleScroll, true)
   }
 
-  // 每屏 格子数量
   getGridsNumPerScreen = () => {
     const viewHeight = window.innerHeight
     const headerHeight = this.content.offsetTop
-    const contentVisibleHeight = viewHeight - headerHeight // content 可视区域
-    const gridRowsPerScreen = Math.ceil(contentVisibleHeight / GRID_HEIGHT) // 该区域内能放几行
+    const contentVisibleHeight = viewHeight - headerHeight
+    const gridRowsPerScreen = Math.ceil(contentVisibleHeight / GRID_HEIGHT)
     const gridNum = gridRowsPerScreen * GRIDS_NUM_PER_ROW
 
     return gridNum
@@ -70,6 +66,7 @@ class Content extends Component {
     const { target: { scrollHeight, scrollTop, clientHeight } } = e
     if (scrollTop === undefined) return
     const almostReachBottom = (scrollHeight - scrollTop - clientHeight) <= (2 * GRID_HEIGHT)
+    // load more grids when reach the bottom
     if (almostReachBottom) {
       this.loadMoreGridContainers()
     }
@@ -87,7 +84,8 @@ class Content extends Component {
       loadCount
     })
   }
-  // 计算当前屏幕显示的范围，再fetch这部分
+
+  // get visible IDS and fetch their data
   fetchIdsOnScreen = async (scrollTop) => {
     let idsOnScreen = this.getIdsOnScreen(scrollTop)
 
@@ -96,35 +94,35 @@ class Content extends Component {
     this.setState({ gridsInfo: { ...newGridsInfo, ...this.state.gridsInfo } })
   }
 
-  // 计算当前屏幕显示的范围
+  // get visible IDS
   getIdsOnScreen = (scrollTop) => {
-    const pastedGrids = this.getPastedGrids(scrollTop)
-    const [firstGridOnScreenIndex, lastGridOnScreenIndex] = this.getGridsOnScreenIdRange(pastedGrids)
+    const { getPastedGrids, getGridsOnScreenIdRange, state: { storyIds } } = this
+    const pastedGrids = getPastedGrids(scrollTop)
+    const [firstGridOnScreenIndex, lastGridOnScreenIndex] = getGridsOnScreenIdRange(pastedGrids)
 
-    const idsOnScreen = this.state.storyIds.filter((item, index) => { // 直接在500个大数组里计算
-      // const idsOnScreen = this.state.idsToShow.filter((item, index) => { // 在现有越来越长的数组上截取计算
+    const idsOnScreen = storyIds.filter((item, index) => {
       return (firstGridOnScreenIndex <= index) && (index <= lastGridOnScreenIndex)
     })
     return idsOnScreen
   }
 
-  getPastedGrids = (scrollTop) => { // 已经滚过的高度 scrollTop 里的格子数
+  getPastedGrids = (scrollTop) => {
     if (!scrollTop) return 0
-    // console.log(scrollTop)
     const pastedRows = Math.floor(scrollTop / GRID_HEIGHT)
     const pastedGridsNum = pastedRows * GRIDS_NUM_PER_ROW
-    return pastedGridsNum // 已经滚过去的 grid, 看不到了
+    return pastedGridsNum // already invisible
   }
 
-  // 目前屏幕上显示的部分 高度是 从 scrollTop 顶边 到 contentVisibleHeight 底边
+  // index range of visible ids, from scrollTop to contentVisibleHeight(bottom)
   getGridsOnScreenIdRange = (pastedGrids) => {
+    const { getGridsNumPerScreen, setAdvanceRows, state: { storyIds } } = this
     const firstGridOnScreenIndex = pastedGrids
-    const gridsNumPerScreen = this.getGridsNumPerScreen()
-    const lastGridOnScreenIndex = firstGridOnScreenIndex + gridsNumPerScreen - 1 + GRIDS_NUM_PER_ROW //(最后一行，露头就算)
+    const gridsNumPerScreen = getGridsNumPerScreen()
+    const lastGridOnScreenIndex = firstGridOnScreenIndex + gridsNumPerScreen - 1 + GRIDS_NUM_PER_ROW
 
-    const maxIndex = this.state.storyIds.length
-    const advancedFirstIndex = this.setAdvanceRows(firstGridOnScreenIndex, 2, -1) // todo 提前量行数 2 常数
-    const advancedLastIndex = this.setAdvanceRows(lastGridOnScreenIndex, 2, 1, maxIndex)
+    const maxIndex = storyIds.length
+    const advancedFirstIndex = setAdvanceRows(firstGridOnScreenIndex, ADVANCE_ROW_NUM, -1)
+    const advancedLastIndex = setAdvanceRows(lastGridOnScreenIndex, ADVANCE_ROW_NUM, 1, maxIndex)
 
     return [advancedFirstIndex, advancedLastIndex]
   }
@@ -151,7 +149,9 @@ class Content extends Component {
     })
     return (
       <div className="content" ref={content => { this.content = content }}>
-        {this.state.isLoading ? <BigLoading /> : grids}
+        {this.state.isLoading
+          ? <BigLoading />
+          : grids}
       </div>
     )
   }

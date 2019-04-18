@@ -1,6 +1,6 @@
 import React, { Component } from 'react'
-import Grid from './Grid'
-import Loading from './Loading'
+import Grid from '../components/Grid'
+import Loading from '../components/layout/Loading'
 
 class GridContainer extends Component {
 

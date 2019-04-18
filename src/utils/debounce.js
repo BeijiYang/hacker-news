@@ -1,15 +1,13 @@
 export const debounce = function (func, wait, immediate) {
-
-	var timeout, result
+	let timeout, result
 
 	return function () {
-		var context = this
-		var args = arguments
+		let context = this
+		let args = arguments
 
 		if (timeout) clearTimeout(timeout)
 		if (immediate) {
-			// 如果已经执行过，不再执行
-			var callNow = !timeout
+			let callNow = !timeout
 			timeout = setTimeout(function () {
 				timeout = null
 			}, wait)

@@ -9,7 +9,7 @@ const getStoryInfoFromServer = `${proxyServer}/getStoryInfo`
 
 export default class Fetch {
 	constructor() {
-		this.fetchedGrids = {}
+		this.fetchedGrids = {} // lock
 	}
 
 	_fetchStory(idsToFatch) {
@@ -25,13 +25,11 @@ export default class Fetch {
 
 	fetchFirstPage(idsToShowOnfirstPage) {
 		return axios.post(getFirstPageInfoFromServer, { idsToShow: idsToShowOnfirstPage }).then(res => res.data)
-		// const gridsInfo = await 
 	}
 
 	async fetchGridOnScreenInfo(idsOnScreen, gridsInfo) {
-		// 需要fetch数据的ID数组
+		// check local data first
 		const idsToFatch = idsOnScreen.filter(id => {
-			// console.log(gridsInfo[id])
 			return !(gridsInfo[id] || this.fetchedGrids[id])
 		})
 
@@ -43,7 +41,5 @@ export default class Fetch {
 			this._unlLock(idsToFatch)
 			return newGridsInfo
 		}
-
 	}
-
 }
