@@ -42,8 +42,8 @@ export default class Fetch {
 			idsToFatch.forEach(id => {
 				this.fetchedGrids[id] = true // lock
 			})
-			// const newGridsInfo = await this._fetchStory(idsToFatch)
-			const newGridsInfo = await this.fetchPagesInfoFast(idsToFatch) // when server is ready
+			// const newGridsInfo = await this._fetchStory(idsToFatch)	// old version, don't need to wait at the server to get ready
+			const newGridsInfo = await this.fetchPagesInfoFast(idsToFatch) // AFTER THE SERVER IS READY
 			this._unlLock(idsToFatch)
 			return newGridsInfo
 		}
