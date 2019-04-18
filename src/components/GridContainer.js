@@ -1,5 +1,6 @@
 import React, { Component } from 'react'
 import Grid from './Grid'
+import Loading from './Loading'
 
 class GridContainer extends Component {
 
@@ -25,11 +26,14 @@ class GridContainer extends Component {
     const { toggleExpand, handleClickUrl } = this
     return (
       <div className="grid" ref={(grid) => this.grid = grid}>
-        <Grid
-          handleClick={toggleExpand}
-          handleClickUrl={handleClickUrl}
-          {...this.props}
-        />
+        {this.props.title
+          ? <Grid
+            handleClick={toggleExpand}
+            handleClickUrl={handleClickUrl}
+            {...this.props}
+          />
+          : <Loading />
+        }
       </div>
     )
   }
