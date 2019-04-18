@@ -2,12 +2,12 @@ import React from 'react'
 import PropTypes from 'prop-types'
 import '../styles/grid.css'
 
-const Grid = ({ title, by, score, url, text, handleClick }) => (
+const Grid = ({ title, by, score, url, text, handleClick, handleClickUrl }) => (
 	<div className="grid-wrap" onClick={handleClick}>
 		<div className="grid-score">
 			<div className="grid-triangle"></div>
 			<div className="grid-score-number">{score}</div>
-			<a href={url} className="grid-url">GO</a>
+			<a href={url} className="grid-url" onClick={handleClickUrl}>GO</a>
 		</div>
 		<div className="grid-content">
 			<div className="grid-title"><p>{title}</p></div>
@@ -19,6 +19,7 @@ const Grid = ({ title, by, score, url, text, handleClick }) => (
 
 Grid.propTypes = {
 	handleClick: PropTypes.func,
+	handleClickUrl: PropTypes.func,
 	title: PropTypes.string,
 	by: PropTypes.string,
 	score: PropTypes.number,

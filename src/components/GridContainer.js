@@ -9,16 +9,18 @@ class GridContainer extends Component {
   toggleExpand = (e) => {
     this.grid.classList.toggle('expand')
   }
-  test = () => {
-    console.log('sssss')
+
+  handleClickUrl = (e) => {
+    e.stopPropagation();
   }
 
   render() {
-    const { toggleExpand } = this
+    const { toggleExpand, handleClickUrl } = this
     return (
       <div className="grid" ref={(grid) => this.grid = grid}>
         <Grid
           handleClick={toggleExpand}
+          handleClickUrl={handleClickUrl}
           {...this.props}
         />
       </div>
