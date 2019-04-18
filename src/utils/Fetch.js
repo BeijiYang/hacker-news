@@ -1,11 +1,10 @@
 import axios from 'axios'
+import {
+	topStoriesUrl,
+	getFirstPageInfoFromServer,
+	getStoryInfoFromServer
+} from '../constants/APIs'
 
-const storiesUrl = 'https://hacker-news.firebaseio.com/v0/'
-const getTopStoriesUrl = () => (`${storiesUrl}/topstories.json`)
-
-const proxyServer = 'http://localhost:3001'
-const getFirstPageInfoFromServer = `${proxyServer}/getFirstPageInfo`
-const getStoryInfoFromServer = `${proxyServer}/getStoryInfo`
 
 export default class Fetch {
 	constructor() {
@@ -20,7 +19,8 @@ export default class Fetch {
 	}
 
 	fetchTopStories() {
-		return axios(getTopStoriesUrl()).then(res => res.data)
+		return axios(topStoriesUrl).then(res => res.data)
+		// return axios(getTopStoriesUrl()).then(res => res.data)
 	}
 
 	fetchFirstPage(idsToShowOnfirstPage) {

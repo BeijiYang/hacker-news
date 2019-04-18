@@ -1,16 +1,17 @@
 import React, { Component } from 'react'
+import axios from 'axios'
 import GridContainer from './GridContainer'
 import Fetch from '../utils/Fetch'
 import BigLoading from '../components/layout/BigLoading'
-import axios from 'axios'
 import { debounce } from '../utils/debounce'
+import {
+  GRID_HEIGHT,
+  GRIDS_NUM_PER_ROW,
+  PRE_VIEW_NUM,
+  ADVANCE_ROW_NUM,
+  ADVANCE_FETCH_TIME
+} from '../constants/constants'
 import '../styles/content.css'
-
-const GRID_HEIGHT = 120
-const GRIDS_NUM_PER_ROW = 8
-const PRE_VIEW_NUM = 500
-const ADVANCE_ROW_NUM = 2
-const ADVANCE_FETCH_TIME = 3000
 
 const fetcher = new Fetch()
 
