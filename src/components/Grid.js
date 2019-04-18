@@ -1,8 +1,9 @@
 import React from 'react'
+import PropTypes from 'prop-types'
 import '../styles/grid.css'
 
-const Grid = () => (
-	<div className="grid-wrap">
+const Grid = ({ handleClick }) => (
+	<div className="grid-wrap" onClick={handleClick}>
 		<div className="grid-score">
 			<div className="grid-triangle"></div>
 			<div className="grid-score-number">score</div>
@@ -15,5 +16,9 @@ const Grid = () => (
 		</div>
 	</div>
 )
+
+Grid.propTypes = {
+	handleClick: PropTypes.func,
+}
 
 export default Grid

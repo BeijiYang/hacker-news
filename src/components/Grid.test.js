@@ -7,10 +7,11 @@ import Adapter from 'enzyme-adapter-react-16'
 
 Enzyme.configure({ adapter: new Adapter() })
 
-describe('<GridContainer />', () => {
-	it('renders a Grid', () => {
-		const wrapper = shallow(<GridContainer />)
-		const Grid = wrapper.find('Grid')
-		expect(Grid).toHaveLength(1)
+describe('<Grid />', () => {
+	it('Test click event', () => {
+		// const mockCallBack = jest.fn()
+		// const t = shallow((<Grid onClick={mockCallBack} />))
+		// t.find('.grid-wrap').simulate('click')
+		// expect(mockCallBack.mock.calls.length).toEqual(1)
 	})
 })
