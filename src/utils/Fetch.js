@@ -2,7 +2,8 @@ import axios from 'axios'
 import {
 	topStoriesUrl,
 	getFirstPageInfoFromServer,
-	getStoryInfoFromServer
+	getStoryInfoFromServer,
+	getfetchPagesInfoFastFromServer,
 } from '../constants/APIs'
 
 
@@ -27,6 +28,10 @@ export default class Fetch {
 		return axios.post(getFirstPageInfoFromServer, { idsToShow: idsToShowOnfirstPage }).then(res => res.data)
 	}
 
+	fetchPagesInfoFast(idsToShowOnfirstPage) {
+		return axios.post(getfetchPagesInfoFastFromServer, { idsToShow: idsToShowOnfirstPage }).then(res => res.data)
+	}
+
 	async fetchGridOnScreenInfo(idsOnScreen, gridsInfo) {
 		// check local data first
 		const idsToFatch = idsOnScreen.filter(id => {
@@ -37,7 +42,8 @@ export default class Fetch {
 			idsToFatch.forEach(id => {
 				this.fetchedGrids[id] = true // lock
 			})
-			const newGridsInfo = await this._fetchStory(idsToFatch)
+			// const newGridsInfo = await this._fetchStory(idsToFatch)
+			const newGridsInfo = await this.fetchPagesInfoFast(idsToFatch) // when server is ready
 			this._unlLock(idsToFatch)
 			return newGridsInfo
 		}
