@@ -4,7 +4,7 @@ React + Express
 
 Data and calculations are not complicated, React can cover it.
 
-Please wait for the server to get ready first.
+Please wait for the server to get ready before start front end.
 
 # How components works
 
