@@ -36,7 +36,7 @@ class Content extends Component {
     const storyIds = await fetcher.fetchTopStories()
 
     const gridsNumPerLoad = this.getGridsNumPerScreen()
-    const idsToShowOnfirstPage = storyIds.slice(0, gridsNumPerLoad + ADVANCE_ROW_NUM)
+    const idsToShowOnfirstPage = storyIds && storyIds.slice(0, gridsNumPerLoad + ADVANCE_ROW_NUM)
     // fast API for first page
     const gridsInfo = await fetcher.fetchFirstPage(idsToShowOnfirstPage)
 
@@ -96,7 +96,7 @@ class Content extends Component {
   loadMoreGridContainers = () => {
     let { storyIds, idsToShow, loadCount, gridsNumPerLoad } = this.state
     loadCount += 1
-    idsToShow = storyIds.slice(0, loadCount * gridsNumPerLoad)
+    idsToShow = storyIds && storyIds.slice(0, loadCount * gridsNumPerLoad)
 
     this.setState({
       idsToShow,
@@ -170,7 +170,7 @@ class Content extends Component {
   render() {
     const { state: { idsToShow, storyIds, gridsInfo } } = this
 
-    const grids = idsToShow.map((id) => {
+    const grids = idsToShow && idsToShow.map((id) => {
       return (<GridContainer
         {...gridsInfo[id]}
         key={id}
