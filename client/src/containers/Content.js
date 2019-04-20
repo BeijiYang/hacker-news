@@ -58,7 +58,7 @@ class Content extends Component {
 
   getGridsNumPerScreen = () => {
     const viewHeight = window.innerHeight
-    const headerHeight = this.content.offsetTop
+    const headerHeight = this.content && this.content.offsetTop
     const contentVisibleHeight = viewHeight - headerHeight
     const gridRowsPerScreen = Math.ceil(contentVisibleHeight / GRID_HEIGHT)
     const gridNum = gridRowsPerScreen * GRIDS_NUM_PER_ROW

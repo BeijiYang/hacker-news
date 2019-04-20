@@ -11,8 +11,8 @@ const Grid = ({ title, by, score, url, text, handleClick, handleClickUrl }) => (
 		</div>
 		<div className="grid-content">
 			<div className="grid-title"><p>{title}</p></div>
-			<div className="grid-by"><p>By {by}</p> </div>
-			<div className="grid-text"><p>{text}</p> </div>
+			<div className="grid-by"><p>By {by}</p></div>
+			<div className="grid-text"><p>{text}</p></div>
 		</div>
 	</div>
 )

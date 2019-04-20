@@ -20,7 +20,8 @@ export default class Fetch {
 	}
 
 	fetchTopStories() {
-		return axios(topStoriesUrl).then(res => res.data)
+		// return axios(topStoriesUrl).then(res => res.data)
+		return axios.get(topStoriesUrl).then(res => res.data)
 		// return axios(getTopStoriesUrl()).then(res => res.data)
 	}
 
