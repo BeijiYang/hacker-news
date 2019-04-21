@@ -93,30 +93,29 @@
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
+    -webkit-line-clamp: 2;
     /*! autoprefixer: off */
     -webkit-box-orient: vertical;
-    /* autoprefixer: on */
-    -webkit-line-clamp: 2;
 }
 .grid>.grid-wrap>.grid-content>.grid-by>p {
     word-wrap: break-word;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
+    -webkit-line-clamp: 1;
     /*! autoprefixer: off */
     -webkit-box-orient: vertical;
-    /* autoprefixer: on */
-    -webkit-line-clamp: 1;
+    
 }
 .grid>.grid-wrap>.grid-content>.grid-title>p {
     word-wrap: break-word;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
+    -webkit-line-clamp: 2;
     /*! autoprefixer: off */
     -webkit-box-orient: vertical;
-    /* autoprefixer: on */
-    -webkit-line-clamp: 2;
+    
 }
 
 
@@ -125,19 +124,17 @@
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
+    -webkit-line-clamp: 9;
     /*! autoprefixer: off */
     -webkit-box-orient: vertical;
-    /* autoprefixer: on */
-    -webkit-line-clamp: 9;
 }
 .grid.expand>.grid-wrap>.grid-content>.grid-title>p {
     word-wrap: break-word;
     overflow: hidden;
     text-overflow: ellipsis;
     display: -webkit-box;
-    /*! autoprefixer: off */
-    -webkit-box-orient: vertical;
-    /* autoprefixer: on */
     -webkit-line-clamp: 3;
     min-height: 45px;
+    /*! autoprefixer: off */
+    -webkit-box-orient: vertical;
 }

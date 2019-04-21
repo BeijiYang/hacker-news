@@ -1,5 +1,4 @@
 import React, { Component } from 'react'
-import axios from 'axios'
 import GridContainer from './GridContainer'
 import Fetch from '../utils/Fetch'
 import BigLoading from '../components/layout/BigLoading'
@@ -7,7 +6,6 @@ import { debounce } from '../utils/debounce'
 import {
   GRID_HEIGHT,
   GRIDS_NUM_PER_ROW,
-  PRE_VIEW_NUM,
   ADVANCE_ROW_NUM,
   ADVANCE_FETCH_TIME
 } from '../constants/constants'
@@ -168,7 +166,7 @@ class Content extends Component {
   // }
 
   render() {
-    const { state: { idsToShow, storyIds, gridsInfo } } = this
+    const { state: { idsToShow, gridsInfo } } = this
 
     const grids = idsToShow && idsToShow.map((id) => {
       return (<GridContainer
