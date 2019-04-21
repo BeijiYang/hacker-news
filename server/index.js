@@ -12,14 +12,11 @@ app.use(bodyParser.json())
 app.use(cors())
 
 // fetch data in advace
-fetch.setDataReady()
+fetch.initializeFakeDB()
 
+app.get('/', fetch.showFakeDB)
 
-app.get('/', fetch.showData)
-
-app.post('/getFirstPageInfo', fetch.queryFakeDatabase)
-
-app.post('/getageInfoFast', fetch.queryFakeDatabase)
+app.post('/getFirstPageInfo', fetch.getStoryInfo)
 
 app.post('/getStoryInfo', fetch.getStoryInfo)
 

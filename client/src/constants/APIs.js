@@ -7,4 +7,3 @@ const proxyServer = config.proxyServer
 export const topStoriesUrl = `${storiesUrl}/topstories.json`
 export const getFirstPageInfoFromServer = `${proxyServer}/getFirstPageInfo`
 export const getStoryInfoFromServer = `${proxyServer}/getStoryInfo`
-export const getfetchPagesInfoFastFromServer = `${proxyServer}/getageInfoFast`

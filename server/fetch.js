@@ -9,7 +9,7 @@ const getSingleStoryUrl = (id) => (`${storiesUrl}/item/${id}.json`)
 
 let fakeDB = {}
 
-// 从 HTML 字符串中找 p 标签取文字
+// generate preview text
 const getParagraphText = (htmlString, num = 500) => {
   const dom = new JSDOM(htmlString);
   const paragraphs = dom.window.document.querySelectorAll('p')
@@ -20,97 +20,101 @@ const getParagraphText = (htmlString, num = 500) => {
   }
   return text
 }
-
+// get top stories ids
 const fetchTopStories = (axios) => (
   axios(getTopStoriesUrl()).then(res => res.data)
 )
-
+// get data of single story
 const fetchStory = (axios, id) => (
-  axios(getSingleStoryUrl(id)).then(res => res.data) // 每个故事的data
+  axios(getSingleStoryUrl(id)).then(res => res.data)
 )
 
 const fakeQueryDB = (id) => (fakeDB[id])
 
-exports.showData = (req, res) => {
+const queryAllFromFakeDB = (ids) => {
+  const tempData = {}
+  ids.forEach(id => {
+    tempData[id] = fakeQueryDB(id) || null
+  })
+  return tempData
+}
+
+const getText = (url) => {
+  return axios.get(url)
+    .then(page => page.data)
+    .then(htmlStr => getParagraphText(htmlStr, 500))
+    .catch(err => console.log(err))
+}
+
+const setDataValue = async (data) => {
+  const { id, url, text } = data
+  // set url
+  if (!url) { data.url = askUrl(id) }
+  // set text
+  if (!text) {
+    if (data.url.substr(-4) === '.pdf') {
+      data.text = 'PDF'
+    } else {
+      data.text = await getText(data.url)
+    }
+  }
+  return data
+}
+
+const fetchAll = (ids, res) => {
+  // fetch API
+  const fetchToShow = ids.map(id => fetchStory(axios, id)) // 分别向API请求数据
+  const tempData = {}
+  return axios.all(fetchToShow).then(
+    async dataArr => {
+      for (let i = 0; i < dataArr.length; i++) {
+        const data = dataArr[i]
+        const id = data.id
+        tempData[id] = await setDataValue(data)
+      }
+      return tempData
+    }
+  )
+}
+
+exports.showFakeDB = (req, res) => {
   res.send(fakeDB)
 }
 
-exports.queryFakeDatabase = (req, res) => {
-  const { body: { idsToShow: idArr } } = req
-  // query local
-  const tempData = {}
-  idArr.forEach(id => {
-    tempData[id] = fakeQueryDB(id) || null
-  })
-  res.send(tempData)
-}
-
-
-exports.setDataReady = async () => {
+exports.initializeFakeDB = async () => {
   const storyIds = await fetchTopStories(axios)
-
   // const fristPageData = storyIds.slice(0, 50)
-
   const idsToFatch = storyIds
 
   for (let i = 0; i < idsToFatch.length; i++) {
     const id = idsToFatch[i];
     const storyData = await fetchStory(axios, id)
+    const completeData = await setDataValue(storyData)
 
-    if (!storyData.url) storyData.url = askUrl(id)
-    // if (!storyData.url) storyData.url = `https://news.ycombinator.com/item?id=${id}`
-    if (!storyData.text) {
-      console.time(id)
-      if (storyData.url.substr(-4) === '.pdf') {
-        text = 'PDF'
-      } else {
-        text = await axios.get(storyData.url).then(page => page.data).then(htmlStr => getParagraphText(htmlStr, 500)).catch(err => console.log(err))
-      }
-      console.timeEnd(id)
-      storyData.text = text
-    }
-
-    fakeDB[id] = storyData
-    console.count('for')
-    console.log(`fetch data for first page: ${500 - i} left to go`)
+    fakeDB[id] = completeData
+    console.log(`fetching data: ${i} done, ${500 - i} to go`)
   }
   console.log('~DATA READY~')
 }
 
-// todo 先查缓存 没有在fetch data from API
-exports.getStoryInfo = (req, res) => {
+// only fetch data from API when necessary
+exports.getStoryInfo = async (req, res) => {
   const { body: { idsToShow: idArr } } = req
-  // // query local
-  const tempData = {}
 
-  // TODO 缓存
-  // fetch API
-  const fetchToShow = idArr.map(id => fetchStory(axios, id)) // 分别向API请求数据
+  const alreadySaved = (id) => (!!fakeQueryDB(id))
 
-  // const tempData = {}
-  axios.all(fetchToShow).then(
-    dataArr => {
-      dataArr.forEach(
-        data => {
-          let id = data.id
-          if (!data.url) { data.url = `https://news.ycombinator.com/item?id=${id}` }
-          if (!data.text) {
-            // this.getText(data.url).then(text => data.text = text)
-            // 重复
-            if (data.url.substr(-4) === '.pdf') {
-              console.log('fucking PDF!!!')
-              text = 'PDF'
-              data.text = text
-            } else {
-              data.text = 'old version API blablabla'
-            }
-          }
-          // data.text = 'sdfsdfsdfsdf'
-          tempData[id] = data
-        }
-      )
-      // fakeDB = { ...tempData, ...fakeDB } // 缓存
-      res.send(tempData)
-    }
-  )
+  const idsQueryFromDB = idArr.filter(id => alreadySaved(id))
+  const dataFromDB = (idsQueryFromDB.length) ? queryAllFromFakeDB(idArr) : {}
+  console.log("idsQueryFromDB.length   " + idsQueryFromDB.length)
+  console.log(`${idsQueryFromDB.length} ids from local fakeDB`)
+
+  const idsNeedToFetch = idArr.filter(id => !alreadySaved(id))
+  const dataFromApi = (idsNeedToFetch.length) ? await fetchAll(idsNeedToFetch) : {}
+  console.log("idsNeedToFetch.length   " + idsNeedToFetch.length)
+  console.log(`${idsNeedToFetch.length} ids to fetch from API`)
+
+  const dataToSend = { ...dataFromDB, ...dataFromApi }
+  res.send(dataToSend)
+
+  fakeDB = { ...fakeDB, ...dataToSend } // update fakeDB
 }

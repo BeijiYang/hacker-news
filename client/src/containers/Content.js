@@ -110,7 +110,7 @@ class Content extends Component {
 
     let newGridsInfo = await fetcher.fetchGridOnScreenInfo(idsOnScreen, this.state.gridsInfo)
 
-    this.setState({ gridsInfo: { ...newGridsInfo, ...this.state.gridsInfo } })
+    this.setState({ gridsInfo: { ...this.state.gridsInfo, ...newGridsInfo } })
   }
 
   // get visible IDS
