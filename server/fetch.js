@@ -1,7 +1,9 @@
 const axios = require('axios')
 const jsdom = require("jsdom")
-const { JSDOM } = jsdom;
+const ProgressBar = require('progress')
+const { JSDOM } = jsdom
 
+const PRE_VIEW_NUM = 500
 const storiesUrl = 'https://hacker-news.firebaseio.com/v0/'
 const askUrl = (id) => (`https://news.ycombinator.com/item?id=${id}`)
 const getTopStoriesUrl = () => (`${storiesUrl}/topstories.json`)
@@ -10,7 +12,7 @@ const getSingleStoryUrl = (id) => (`${storiesUrl}/item/${id}.json`)
 let fakeDB = {}
 
 // generate preview text
-const getParagraphText = (htmlString, num = 500) => {
+const getParagraphText = (htmlString, num = PRE_VIEW_NUM) => {
   const dom = new JSDOM(htmlString);
   const paragraphs = dom.window.document.querySelectorAll('p')
   let text = ''
@@ -42,7 +44,7 @@ const queryAllFromFakeDB = (ids) => {
 const getText = (url) => {
   return axios.get(url)
     .then(page => page.data)
-    .then(htmlStr => getParagraphText(htmlStr, 500))
+    .then(htmlStr => getParagraphText(htmlStr, PRE_VIEW_NUM))
     .catch(err => console.log(err))
 }
 
@@ -86,13 +88,21 @@ exports.initializeFakeDB = async () => {
   // const fristPageData = storyIds.slice(0, 50)
   const idsToFatch = storyIds
 
+  const bar = new ProgressBar('  initializing [:bar] :percent :etas', {
+    complete: '=',
+    incomplete: ' ',
+    width: 50,
+    total: idsToFatch.length
+  })
+
   for (let i = 0; i < idsToFatch.length; i++) {
     const id = idsToFatch[i];
     const storyData = await fetchStory(axios, id)
     const completeData = await setDataValue(storyData)
 
     fakeDB[id] = completeData
-    console.log(`fetching data: ${i} done, ${500 - i} to go`)
+    console.log(`  ${i}/${idsToFatch.length}`)
+    bar.tick()
   }
   console.log('~DATA READY~')
 }
@@ -105,12 +115,10 @@ exports.getStoryInfo = async (req, res) => {
 
   const idsQueryFromDB = idArr.filter(id => alreadySaved(id))
   const dataFromDB = (idsQueryFromDB.length) ? queryAllFromFakeDB(idArr) : {}
-  console.log("idsQueryFromDB.length   " + idsQueryFromDB.length)
   console.log(`${idsQueryFromDB.length} ids from local fakeDB`)
 
   const idsNeedToFetch = idArr.filter(id => !alreadySaved(id))
   const dataFromApi = (idsNeedToFetch.length) ? await fetchAll(idsNeedToFetch) : {}
-  console.log("idsNeedToFetch.length   " + idsNeedToFetch.length)
   console.log(`${idsNeedToFetch.length} ids to fetch from API`)
 
   const dataToSend = { ...dataFromDB, ...dataFromApi }
