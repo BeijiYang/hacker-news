@@ -4,6 +4,7 @@ const ProgressBar = require('progress')
 const { JSDOM } = jsdom
 
 const PRE_VIEW_NUM = 500
+const RE_SET_TIME = 1000 * 60 * 60
 const storiesUrl = 'https://hacker-news.firebaseio.com/v0/'
 const askUrl = (id) => (`https://news.ycombinator.com/item?id=${id}`)
 const getTopStoriesUrl = () => (`${storiesUrl}/topstories.json`)
@@ -79,21 +80,36 @@ const fetchAll = (ids, res) => {
   )
 }
 
-exports.showFakeDB = (req, res) => {
-  res.send(fakeDB)
+/**
+ * @param ids {Array} an array to filter
+ */
+const filterIds = (ids) => {
+  const alreadySaved = (id) => (!!fakeQueryDB(id))
+
+  const idsQueryFromDB = ids.filter(id => alreadySaved(id))
+  const idsNeedToFetch = ids.filter(id => !alreadySaved(id))
+
+  return [idsQueryFromDB, idsNeedToFetch]
 }
 
-exports.initializeFakeDB = async () => {
-  const storyIds = await fetchTopStories(axios)
-  // const fristPageData = storyIds.slice(0, 50)
-  const idsToFatch = storyIds
-
+const addProgressBar = (len) => {
   const bar = new ProgressBar('  initializing [:bar] :percent :etas', {
     complete: '=',
     incomplete: ' ',
     width: 50,
-    total: idsToFatch.length
+    total: len
   })
+  return bar
+}
+
+// get data of all top stories and save it in fake DB
+setFakeDB = async () => {
+  const storyIds = await fetchTopStories(axios)
+  const [, idsToFatch] = filterIds(storyIds)
+  const len = idsToFatch.length
+  if (!len) return
+
+  const bar = addProgressBar(len)
 
   for (let i = 0; i < idsToFatch.length; i++) {
     const id = idsToFatch[i];
@@ -101,20 +117,20 @@ exports.initializeFakeDB = async () => {
     const completeData = await setDataValue(storyData)
 
     fakeDB[id] = completeData
-    console.log(`  ${i}/${idsToFatch.length}`)
+    console.log(`  ${i + 1}/${idsToFatch.length}`)
     bar.tick()
   }
   console.log('~DATA READY~')
 }
 
-// only fetch data from API when necessary
+exports.showFakeDB = (req, res) => {
+  res.send(fakeDB)
+}
+
 exports.getStoryInfo = async (req, res) => {
   const { body: { idsToShow: idArr } } = req
-
-  const alreadySaved = (id) => (!!fakeQueryDB(id))
-
-  const idsQueryFromDB = idArr.filter(id => alreadySaved(id))
-  const idsNeedToFetch = idArr.filter(id => !alreadySaved(id))
+  // only fetch data from API when necessary
+  const [idsQueryFromDB, idsNeedToFetch] = filterIds(idArr)
   console.log(`${idsQueryFromDB.length} ids from local fakeDB \n${idsNeedToFetch.length} ids to fetch from API \n`)
 
   const dataFromDB = (idsQueryFromDB.length) ? queryAllFromFakeDB(idArr) : {}
@@ -124,4 +140,9 @@ exports.getStoryInfo = async (req, res) => {
   res.send(dataToSend)
 
   fakeDB = { ...fakeDB, ...dataToSend } // update fakeDB
+}
+
+exports.initializeFakeDB = () => {
+  setFakeDB()
+  setInterval(setFakeDB, RE_SET_TIME) // refetch every hour to add new story data
 }
