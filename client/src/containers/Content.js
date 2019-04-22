@@ -36,7 +36,7 @@ class Content extends Component {
     const gridsNumPerLoad = this.getGridsNumPerScreen()
     const idsToShowOnfirstPage = storyIds && storyIds.slice(0, gridsNumPerLoad + ADVANCE_ROW_NUM)
     // fast API for first page
-    const gridsInfo = await fetcher.fetchFirstPage(idsToShowOnfirstPage)
+    const gridsInfo = await fetcher.fetchIds(idsToShowOnfirstPage, {})
 
     this.setState({
       storyIds,
@@ -54,6 +54,15 @@ class Content extends Component {
     window.removeEventListener('scroll', this.debouncedHandleScroll, true)
   }
 
+  /**
+   * @param ids {Array} an array of ids to fetch
+   */
+  fetchIds = async (ids) => {
+    const newGridsInfo = await fetcher.fetchIds(ids, this.state.gridsInfo)
+    if (!newGridsInfo) return
+    this.setState({ gridsInfo: { ...this.state.gridsInfo, ...newGridsInfo } })
+  }
+
   getGridsNumPerScreen = () => {
     const viewHeight = window.innerHeight
     const headerHeight = this.content && this.content.offsetTop
@@ -62,53 +71,6 @@ class Content extends Component {
     const gridNum = gridRowsPerScreen * GRIDS_NUM_PER_ROW
 
     return gridNum
-  }
-
-  handleScroll = (e) => {
-    const { target: { scrollHeight, scrollTop, clientHeight } } = e
-    if (scrollTop === undefined) return
-    const almostReachBottom = (scrollHeight - scrollTop - clientHeight) <= (2 * GRID_HEIGHT)
-    // load more grids when reach the bottom
-    if (almostReachBottom) {
-      this.loadMoreGridContainers()
-    }
-    // get visible ids and fetch them
-    this.debouncedFetchIdsOnScreen(scrollTop)
-
-    this.fetchInAdvanceIfUserStay(scrollTop)
-  }
-
-  // TODO: fetch next page in advance if the user stays
-  fetchInAdvanceIfUserStay = (scrollTop) => {
-    clearTimeout(this.timer)
-    this.timer = setTimeout(() => {
-      if (this.lastScrollTop === scrollTop) {
-        // const idsOnNextPage = this.getIdsOnNextPage(scrollTop)
-        // const newGridsInfo = fetcher.fetchNextPage()
-        // this.setState({ gridsInfo: { ...newGridsInfo, ...this.state.gridsInfo } })
-      }
-    }, ADVANCE_FETCH_TIME);
-    this.lastScrollTop = scrollTop
-  }
-
-  loadMoreGridContainers = () => {
-    let { storyIds, idsToShow, loadCount, gridsNumPerLoad } = this.state
-    loadCount += 1
-    idsToShow = storyIds && storyIds.slice(0, loadCount * gridsNumPerLoad)
-
-    this.setState({
-      idsToShow,
-      loadCount
-    })
-  }
-
-  // get visible IDS and fetch their data
-  fetchIdsOnScreen = async (scrollTop) => {
-    let idsOnScreen = this.getIdsOnScreen(scrollTop)
-
-    let newGridsInfo = await fetcher.fetchGridOnScreenInfo(idsOnScreen, this.state.gridsInfo)
-
-    this.setState({ gridsInfo: { ...this.state.gridsInfo, ...newGridsInfo } })
   }
 
   // get visible IDS
@@ -130,6 +92,67 @@ class Content extends Component {
     return pastedGridsNum // already invisible
   }
 
+  handleScroll = (e) => {
+    const { target: { scrollHeight, scrollTop, clientHeight } } = e
+    if (scrollTop === undefined) return
+    const almostReachBottom = (scrollHeight - scrollTop - clientHeight) <= (2 * GRID_HEIGHT)
+    // load more grids when reach the bottom
+    if (almostReachBottom) {
+      this.loadMoreGridContainers()
+    }
+    // get visible ids and fetch them
+    this.debouncedFetchIdsOnScreen(scrollTop)
+
+    const scrollDown = this.lastScrollTop < scrollTop
+    if (scrollDown) {
+      this.fetchNextPageIfUserStay(scrollTop)
+    }
+  }
+
+  loadMoreGridContainers = () => {
+    let { storyIds, idsToShow, loadCount, gridsNumPerLoad } = this.state
+    loadCount += 1
+    idsToShow = storyIds && storyIds.slice(0, loadCount * gridsNumPerLoad)
+
+    this.setState({
+      idsToShow,
+      loadCount
+    })
+  }
+
+  // get visible IDS and fetch their data
+  fetchIdsOnScreen = async (scrollTop) => {
+    const { getIdsOnScreen, fetchIds } = this
+    const idsOnScreen = getIdsOnScreen(scrollTop)
+    fetchIds(idsOnScreen)
+  }
+
+  // fetch the next page in advance if the user stays
+  fetchNextPageIfUserStay = (scrollTop) => {
+    let { timer, lastScrollTop, getIdsOnNextPage, fetchIds } = this
+    clearTimeout(timer)
+    timer = setTimeout(async () => {
+      const userStays = lastScrollTop === scrollTop
+      if (userStays) {
+        const idsOnNextPage = getIdsOnNextPage(scrollTop)
+        const reachTheLastPage = idsOnNextPage.length === 0
+        if (reachTheLastPage) return
+        fetchIds(idsOnNextPage)
+      }
+    }, ADVANCE_FETCH_TIME);
+    lastScrollTop = scrollTop
+  }
+
+  getIdsOnNextPage = (scrollTop) => {
+    const { getIdsOnScreen, state: { storyIds, gridsNumPerLoad } } = this
+    const idsOnScreen = getIdsOnScreen(scrollTop)
+    const lastId = idsOnScreen[idsOnScreen.length - 1]
+    const lastIndex = storyIds.indexOf(lastId)
+    const nextPageIndex = lastIndex + 1
+    const nextPageIds = storyIds.concat().splice(nextPageIndex, gridsNumPerLoad)
+    return nextPageIds
+  }
+
   // index range of visible ids, from scrollTop to contentVisibleHeight(bottom)
   getGridsOnScreenIdRange = (pastedGrids) => {
     const { getGridsNumPerScreen, setAdvanceRows, state: { storyIds } } = this
@@ -143,6 +166,7 @@ class Content extends Component {
 
     return [advancedFirstIndex, advancedLastIndex]
   }
+
   /**
    * @param index {Number}
    * @param advanceRowNum {Number}
@@ -155,16 +179,6 @@ class Content extends Component {
     return advancedIndex
   }
 
-  // getIdsOnNextPage = (scrollTop) => {
-  //   const idsOnScreen = this.getIdsOnScreen(scrollTop)
-  //   const storyIds = this.state.storyIds
-  //   const lastId = idsOnScreen[idsOnScreen.length - 1]
-  //   const lastIndex = storyIds.indexOf(lastId)
-  //   const nextPageIndex = lastIndex + 1
-  //   const nextPageIds = storyIds.concat().splice(nextPageIndex, this.state.gridsNumPerLoad)
-  //   return nextPageIds
-  // }
-
   render() {
     const { state: { idsToShow, gridsInfo } } = this
 
@@ -174,6 +188,7 @@ class Content extends Component {
         key={id}
       />)
     })
+
     return (
       <div className="content" ref={content => { this.content = content }}>
         {this.state.isLoading
