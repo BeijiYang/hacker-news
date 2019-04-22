@@ -16,10 +16,7 @@ fetch.initializeFakeDB()
 
 app.get('/', fetch.showFakeDB)
 
-app.post('/getFirstPageInfo', fetch.getStoryInfo)
-
 app.post('/getStoryInfo', fetch.getStoryInfo)
-
 
 app.listen(3001, () => {
   console.log('Your server is running on port 3001')

@@ -114,12 +114,11 @@ exports.getStoryInfo = async (req, res) => {
   const alreadySaved = (id) => (!!fakeQueryDB(id))
 
   const idsQueryFromDB = idArr.filter(id => alreadySaved(id))
-  const dataFromDB = (idsQueryFromDB.length) ? queryAllFromFakeDB(idArr) : {}
-  console.log(`${idsQueryFromDB.length} ids from local fakeDB`)
-
   const idsNeedToFetch = idArr.filter(id => !alreadySaved(id))
+  console.log(`${idsQueryFromDB.length} ids from local fakeDB \n${idsNeedToFetch.length} ids to fetch from API \n`)
+
+  const dataFromDB = (idsQueryFromDB.length) ? queryAllFromFakeDB(idArr) : {}
   const dataFromApi = (idsNeedToFetch.length) ? await fetchAll(idsNeedToFetch) : {}
-  console.log(`${idsNeedToFetch.length} ids to fetch from API`)
 
   const dataToSend = { ...dataFromDB, ...dataFromApi }
   res.send(dataToSend)

@@ -1,7 +1,6 @@
 import axios from 'axios'
 import {
 	topStoriesUrl,
-	getFirstPageInfoFromServer,
 	getStoryInfoFromServer,
 } from '../constants/APIs'
 
@@ -22,12 +21,7 @@ export default class Fetch {
 		return axios.get(topStoriesUrl).then(res => res.data)
 	}
 
-	fetchFirstPage(idsToShowOnfirstPage) {
-		return axios.post(getFirstPageInfoFromServer, { idsToShow: idsToShowOnfirstPage }).then(res => res.data)
-	}
-
-
-	async fetchGridOnScreenInfo(idsOnScreen, gridsInfo) {
+	async fetchIds(idsOnScreen, gridsInfo) {
 		// check local data first
 		const idsToFatch = idsOnScreen.filter(id => {
 			return !(gridsInfo[id] || this.fetchedGrids[id])
