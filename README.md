@@ -2,11 +2,30 @@
 
 React + Express
 
-Data and calculations are not complicated, React can cover it.
+Basically, the front end gets all the ids of top stories from the Hacker News top stories API, then send every id to Hacker News story API to get the data, and show the title, author, scores, URL and preview text on the page.
 
-Please wait for the server to get ready before start front end.
+The problem is, most of the story data object doesn't contain the 'text' key. To show the preview text of every story, we need to generate one. Since the cross-origin restriction, I use the back end server as a proxy to get the HTML from every URL, then find the `<p>` tags, put the string together as a preview text.
 
-# How components works
+Because generating the preview text is very time consuming, I let the back end prepares the data before the front end sending requests.
+
+Front End:
+* send a request to Hacker News API, get 500 ids of top stories
+* show some of them (according to the size of the screen), load more when almost scroll to the bottom
+* calculate to get an array of visible ids
+* send ids to back end to get data of every story
+* if the user stops longer than 3 seconds, fetch the data of next page in advance
+
+Back End:
+* send a request to Hacker News API, get 500 ids of top stories
+* get the data of all the stories, most of the data object doesn't contain the 'text' key
+* generate the preview text or URL if the data lacking it
+* save the data in the fake DB, waiting for a request from the front end
+* update the data every hour, usually need to fetch data of 10 new ids every time
+
+
+# How it works
+
+Front End
 
 * containers:
   * Content: 
@@ -25,7 +44,7 @@ Please wait for the server to get ready before start front end.
 
 # How did I boost the performance
 
-* Several different directions：
+* Several different ways to boost the performance:
   * reduce HTTP requests
   * reduce DOM nodes
   * Prevent too much (sync) event/calculating in Javascript
@@ -36,15 +55,15 @@ Please wait for the server to get ready before start front end.
 I tried several solutions in demos
 
 #### first version:
-  Every Grid gets its own id, calculates its own visibility and URL, and fetch data  from Hacker News API.
-  Use back end server as a proxy to fetch the HTML of every page, get the p tag and generate the preview text.
+  Every Grid gets its own id, calculates its own visibility and URL, and fetch data from Hacker News API.
+  Use back end server as a proxy to fetch the HTML of every page, get the `<p>` tags and generate the preview text.
 
   * problems: 
     * too much scroll event triggered, especially when the gridsList grows.
     * too much HTTP requests
     
   Front End send request to Hacker News API to fetch the data of every grid, then send the `data.url` to Back End to get the HTML.  Then alculate the preview text. 
-  Very slow, both HTTP request speed and dom manipulating.The performance is a disaster
+  Both HTTP request speed and dom manipulating is very slow. The performance is a disaster
 
 
 #### second version:
@@ -55,7 +74,7 @@ Working on reducing the scroll event and HTTP requests
 
  the result:
  
-   * the number of triggered scroll event and HTTP requests reduced by an order of magnitude. awesome! 
+   * the number of triggered scroll event and HTTP requests reduced by an order of magnitude. Awesome! 
    * But the cross-origin-preview-text-generating process is still slow.
 
 #### third version:
@@ -64,11 +83,11 @@ The cross-origin-preview-text-generating process is slow because it contains thr
 
   * first, generate a URL using id, fetch single story data from Hacker News API,
   * second, send data.url to Bake End to get the HTML string
-  * third, get the ptag and generate the preview text.
+  * third, get the `<p>` tags and generate the preview text.
   
   I tried to let the Back End do the third step job. Still not fast.
 
-  Why don't let the server fetch all the data and save them in advance? When the Front End sends the request, Back End doesn't need to send a request to any API because all the data exist locally.
+  Why don't let the server fetch all the data and save them in advance? If so, when the Front End sends the request, the Back End will not need to send a request to any API because all the data exist locally.
 
  result
  
@@ -80,7 +99,7 @@ The cross-origin-preview-text-generating process is slow because it contains thr
 #### other techniques: 
 
   * save the response data, check them before fetching data, only send a request when necessary.
-  * fetching data is async, it takes time to get the response data from the server. Some times the scroll speed is slow, the same Grid may send the request again before the data arrives. So I used lock variables. lock the id when the fetch starts, unlock it after resolved or rejected.
+  * fetching data is async, it takes time to get the response data from the server after sending the request. Sometimes the scroll speed is slow, the same Grid may send the request again before the data arrives. So I used lock variables. lock the id when the fetch starts, unlock it after resolved or rejected.
 
   * use shouldComponentUpdate to prevent unnecessary component rerendering.
   * use more const element, state less componet, pass less props
@@ -98,7 +117,7 @@ Because the response data of Hacker News API for a story doesn't contain the tex
 
   Sometimes the text is not the beginning of the main article, as the big difference between different pages.
   
-  This issue caused me an interesting problem once. the loading speed of the front page turned from less 1s to almost 10s, and I had no idea why this happened because I did nothing and the net worked fine.
+ This issue caused me an interesting problem once. The loading speed of the front page arisen from less 1s to almost 10s, and I had no idea why this happened because I did nothing and the net worked fine.
   After some investigation, I realized the reason: the program parsed some PDF file as normal HTML string!
   
   If it is a real project, I need to discuss with the back end about this issue. I need a "data.text" from the back end API.
@@ -114,14 +133,12 @@ Because the response data of Hacker News API for a story doesn't contain the tex
 
 
 # TODO
-* pre-fetching
-  if the user stops at the same place more then 3s, fetch the next page data in advance.
+* ~~pre-fetching: 
+  if the user stops at the same place more then 3s, fetch the next page data in advance.~~ (done)
 
 * DOM recycling
 
 * use MongoDB in the backend
-  fetch and calculate 500 data is very slow in Express. Waiting is annoying.
-  Using database. Saving the data, only fetching when necessary.
 
 * more unit tests
 
