@@ -26,8 +26,9 @@ class Content extends Component {
     }
     this.lastScrollTop = 0
     this.timer = null
-    this.debouncedHandleScroll = debounce(this.handleScroll, 100)
+    this.debouncedHandleScroll = debounce(this.handleScroll, 400)
     this.debouncedFetchIdsOnScreen = debounce(this.fetchIdsOnScreen, 400)
+    this.debouncedFetchNextPageIfUserStay = debounce(this.fetchNextPageIfUserStay, 3000)
   }
 
   async componentDidMount() {
@@ -105,7 +106,7 @@ class Content extends Component {
 
     const scrollDown = this.lastScrollTop < scrollTop
     if (scrollDown) {
-      this.fetchNextPageIfUserStay(scrollTop)
+      this.debouncedFetchNextPageIfUserStay(scrollTop)
     }
   }
 
@@ -130,17 +131,11 @@ class Content extends Component {
   // fetch the next page in advance if the user stays
   fetchNextPageIfUserStay = (scrollTop) => {
     let { timer, lastScrollTop, getIdsOnNextPage, fetchIds } = this
-    clearTimeout(timer)
-    timer = setTimeout(async () => {
-      const userStays = lastScrollTop === scrollTop
-      if (userStays) {
-        const idsOnNextPage = getIdsOnNextPage(scrollTop)
-        const reachTheLastPage = idsOnNextPage.length === 0
-        if (reachTheLastPage) return
-        fetchIds(idsOnNextPage)
-      }
-    }, ADVANCE_FETCH_TIME);
-    lastScrollTop = scrollTop
+    const idsOnNextPage = getIdsOnNextPage(scrollTop)
+    const reachTheLastPage = idsOnNextPage.length === 0
+    if (reachTheLastPage) return
+    fetchIds(idsOnNextPage)
+    this.lastScrollTop = scrollTop
   }
 
   getIdsOnNextPage = (scrollTop) => {
