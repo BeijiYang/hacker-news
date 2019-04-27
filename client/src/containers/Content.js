@@ -25,10 +25,9 @@ class Content extends Component {
       isLoading: true
     }
     this.lastScrollTop = 0
-    this.timer = null
     this.debouncedHandleScroll = debounce(this.handleScroll, 400)
     this.debouncedFetchIdsOnScreen = debounce(this.fetchIdsOnScreen, 400)
-    this.debouncedFetchNextPageIfUserStay = debounce(this.fetchNextPageIfUserStay, 3000)
+    this.debouncedFetchNextPageIfUserStay = debounce(this.fetchNextPageIfUserStay, ADVANCE_FETCH_TIME)
   }
 
   async componentDidMount() {
@@ -59,6 +58,7 @@ class Content extends Component {
    * @param ids {Array} an array of ids to fetch
    */
   fetchIds = async (ids) => {
+    if (!Array.isArray(ids)) throw new TypeError(`${ids} should be an array`)
     const newGridsInfo = await fetcher.fetchIds(ids, this.state.gridsInfo)
     if (!newGridsInfo) return
     this.setState({ gridsInfo: { ...this.state.gridsInfo, ...newGridsInfo } })
@@ -76,9 +76,10 @@ class Content extends Component {
 
   // get visible IDS
   getIdsOnScreen = (scrollTop) => {
-    const { getPastedGrids, getGridsOnScreenIdRange, state: { storyIds } } = this
-    const pastedGrids = getPastedGrids(scrollTop)
-    const [firstGridOnScreenIndex, lastGridOnScreenIndex] = getGridsOnScreenIdRange(pastedGrids)
+    if (typeof scrollTop !== 'number' || isNaN(scrollTop)) throw new TypeError(`${scrollTop} should be a number`)
+    const { getPastedGridsNum, getGridsOnScreenIdRange, state: { storyIds } } = this
+    const pastedGridsNum = getPastedGridsNum(scrollTop)
+    const [firstGridOnScreenIndex, lastGridOnScreenIndex] = getGridsOnScreenIdRange(pastedGridsNum)
 
     const idsOnScreen = storyIds.filter((item, index) => {
       return (firstGridOnScreenIndex <= index) && (index <= lastGridOnScreenIndex)
@@ -86,7 +87,8 @@ class Content extends Component {
     return idsOnScreen
   }
 
-  getPastedGrids = (scrollTop) => {
+  getPastedGridsNum = (scrollTop) => {
+    if (typeof scrollTop !== 'number' || isNaN(scrollTop)) throw new TypeError(`${scrollTop} should be a number`)
     if (!scrollTop) return 0
     const pastedRows = Math.floor(scrollTop / GRID_HEIGHT)
     const pastedGridsNum = pastedRows * GRIDS_NUM_PER_ROW
@@ -123,6 +125,7 @@ class Content extends Component {
 
   // get visible IDS and fetch their data
   fetchIdsOnScreen = async (scrollTop) => {
+    if (typeof scrollTop !== 'number' || isNaN(scrollTop)) throw new TypeError(`${scrollTop} should be a number`)
     const { getIdsOnScreen, fetchIds } = this
     const idsOnScreen = getIdsOnScreen(scrollTop)
     fetchIds(idsOnScreen)
@@ -130,7 +133,8 @@ class Content extends Component {
 
   // fetch the next page in advance if the user stays
   fetchNextPageIfUserStay = (scrollTop) => {
-    let { timer, lastScrollTop, getIdsOnNextPage, fetchIds } = this
+    if (typeof scrollTop !== 'number' || isNaN(scrollTop)) throw new TypeError(`${scrollTop} should be a number`)
+    let { getIdsOnNextPage, fetchIds } = this
     const idsOnNextPage = getIdsOnNextPage(scrollTop)
     const reachTheLastPage = idsOnNextPage.length === 0
     if (reachTheLastPage) return
@@ -139,6 +143,7 @@ class Content extends Component {
   }
 
   getIdsOnNextPage = (scrollTop) => {
+    if (typeof scrollTop !== 'number' || isNaN(scrollTop)) throw new TypeError(`${scrollTop} should be a number`)
     const { getIdsOnScreen, state: { storyIds, gridsNumPerLoad } } = this
     const idsOnScreen = getIdsOnScreen(scrollTop)
     const lastId = idsOnScreen[idsOnScreen.length - 1]
@@ -149,9 +154,10 @@ class Content extends Component {
   }
 
   // index range of visible ids, from scrollTop to contentVisibleHeight(bottom)
-  getGridsOnScreenIdRange = (pastedGrids) => {
+  getGridsOnScreenIdRange = (pastedGridsNum) => {
+    if (typeof pastedGridsNum !== 'number' || isNaN(pastedGridsNum)) throw new TypeError(`${pastedGridsNum} should be a number`)
     const { getGridsNumPerScreen, setAdvanceRows, state: { storyIds } } = this
-    const firstGridOnScreenIndex = pastedGrids
+    const firstGridOnScreenIndex = pastedGridsNum
     const gridsNumPerScreen = getGridsNumPerScreen()
     const lastGridOnScreenIndex = firstGridOnScreenIndex + gridsNumPerScreen - 1 + GRIDS_NUM_PER_ROW
 
@@ -166,8 +172,10 @@ class Content extends Component {
    * @param index {Number}
    * @param advanceRowNum {Number}
    * @param direction {Number} -1 for top & 1 for bottom
+   * @param maxIndex {Number} max boundary value
    */
   setAdvanceRows = (index, advanceRowNum, direction, maxIndex) => {
+    if (direction !== 1 && direction !== -1) throw new TypeError(`${direction} should be 1 or -1`)
     let advancedIndex = index + direction * advanceRowNum * GRIDS_NUM_PER_ROW
     if (advancedIndex < 0) advancedIndex = 0
     if (advancedIndex > maxIndex) advancedIndex = maxIndex
