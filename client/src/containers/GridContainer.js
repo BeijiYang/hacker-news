@@ -23,14 +23,14 @@ class GridContainer extends Component {
   }
 
   render() {
-    const { toggleExpand, handleClickUrl } = this
+    const { toggleExpand, handleClickUrl, props } = this
     return (
       <div className="grid" ref={(grid) => this.grid = grid}>
-        {this.props.title
+        {props.title
           ? <Grid
             handleClick={toggleExpand}
             handleClickUrl={handleClickUrl}
-            {...this.props}
+            {...props}
           />
           : <Loading />
         }

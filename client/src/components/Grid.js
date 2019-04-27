@@ -7,7 +7,7 @@ const Grid = ({ title, by, score, url, text, handleClick, handleClickUrl }) => (
 		<div className="grid-score">
 			<div className="grid-triangle"></div>
 			<div className="grid-score-number">{score}</div>
-			<a href={url} className="grid-url" onClick={handleClickUrl}>GO</a>
+			<a href={url} className="grid-url" target="_blank" onClick={handleClickUrl}>GO</a>
 		</div>
 		<div className="grid-content">
 			<div className="grid-title"><p>{title}</p></div>
