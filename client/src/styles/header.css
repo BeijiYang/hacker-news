@@ -1,6 +1,7 @@
 .header {
   height: 100px;
   width: 100vw;
+  min-width: 960px;
   background-color: #ff6700;
   flex: 0 0 auto;
   text-align: center;
