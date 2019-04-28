@@ -2,6 +2,8 @@ const axios = require('axios')
 const jsdom = require("jsdom")
 const ProgressBar = require('progress')
 const { JSDOM } = jsdom
+const virtualConsole = new jsdom.VirtualConsole()
+virtualConsole.on('error', () => { })
 
 const PRE_VIEW_NUM = 500
 const RE_SET_TIME = 1000 * 60 * 60
@@ -14,13 +16,16 @@ let fakeDB = {}
 
 // generate preview text
 const getParagraphText = (htmlString, num = PRE_VIEW_NUM) => {
-  const dom = new JSDOM(htmlString);
+  const dom = new JSDOM(htmlString, { virtualConsole });
   const paragraphs = dom.window.document.querySelectorAll('p')
   let text = ''
   for (let i = 0; i < paragraphs.length; i++) {
-    text += paragraphs[i] && paragraphs[i].textContent.trim()
+    const content = paragraphs[i] && paragraphs[i].textContent.trim()
+    if (content.length > num) continue
+    text += content
     if (text.length >= num) break
   }
+  if (!text) text = 'click on the GO to see the article.'
   return text
 }
 // get top stories ids
@@ -46,7 +51,7 @@ const getText = (url) => {
   return axios.get(url)
     .then(page => page.data)
     .then(htmlStr => getParagraphText(htmlStr, PRE_VIEW_NUM))
-    .catch(err => console.log(err))
+    .catch(err => console.log(err.code))
 }
 
 const setDataValue = async (data) => {
@@ -69,26 +74,32 @@ const fetchAll = (ids, res) => {
   const fetchToShow = ids.map(id => fetchStory(axios, id)) // 分别向API请求数据
   const tempData = {}
   return axios.all(fetchToShow).then(
-    async dataArr => {
-      for (let i = 0; i < dataArr.length; i++) {
-        const data = dataArr[i]
-        const id = data.id
-        tempData[id] = await setDataValue(data)
-      }
+    dataArr => {
+      dataArr.forEach(
+        async data => {
+          const id = data.id
+          tempData[id] = await setDataValue(data)
+        }
+      )
       return tempData
     }
   )
 }
-
+// Divide an array into two arrays according to the condition
+const partition = (fn) => (arr) => (
+  arr.reduce(
+    ([pass, fail], cur) => (
+      fn(cur) ? [[...pass, cur], fail] : [pass, [...fail, cur]]
+    ),
+    [[], []]
+  )
+)
+const alreadySaved = (id) => (!!fakeQueryDB(id))
 /**
  * @param ids {Array} an array to filter
  */
 const filterIds = (ids) => {
-  const alreadySaved = (id) => (!!fakeQueryDB(id))
-
-  const idsQueryFromDB = ids.filter(id => alreadySaved(id))
-  const idsNeedToFetch = ids.filter(id => !alreadySaved(id))
-
+  const [idsQueryFromDB, idsNeedToFetch] = partition(alreadySaved)(ids)
   return [idsQueryFromDB, idsNeedToFetch]
 }
 
